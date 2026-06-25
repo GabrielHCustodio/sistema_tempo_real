@@ -35,24 +35,13 @@ Siga as instruções abaixo para configurar e rodar o projeto em qualquer comput
 ### 1. Clonar ou Baixar o Projeto
 Baixe os arquivos do projeto para a máquina local e abra o terminal (ou prompt de comando) na pasta raiz do código.
 
-### 2. Criar e Ativar um Ambiente Virtual (Recomendado)
-Para evitar conflitos com outras bibliotecas do seu computador, crie um ambiente isolado:
-
-**No Windows:**
-```bash
-python -m venv venv
-venv\Scripts\activate
-No Linux/macOS:
-
-Bash
-python3 -m venv venv
-source venv/bin/activate
-3. Instalar as Dependências
+### 2. Instalar as Dependências
 Com o ambiente virtual ativo, instale todas as bibliotecas necessárias executando:
 
 Bash
 pip install opencv-python mediapipe numpy scikit-learn labels matplotlib
-4. Baixar o Modelo do MediaPipe (.task)
+
+### 3. Baixar o Modelo do MediaPipe (.task)
 O MediaPipe necessita do arquivo de pesos do modelo de Machine Learning para rodar localmente.
 
 Baixe o arquivo oficial do Pose Landmarker (versão Heavy ou Full) diretamente da documentação do MediaPipe.
@@ -61,7 +50,7 @@ Nomeie o arquivo ou garanta que ele possua a palavra pose no nome e a extensão 
 
 Cole o arquivo baixado na mesma pasta onde o script sistema_tempo_real.py está localizado. O código buscará o modelo automaticamente.
 
-5. Executar o Sistema
+### 4. Executar o Sistema
 Agora basta iniciar o script principal:
 
 Bash
@@ -77,7 +66,4 @@ Durante a execução da câmera, você pode interagir com o sistema usando o tec
 
 [q] -> SAIR do sistema, encerrar a câmera e gerar automaticamente os gráficos e relatórios na tela.
 
-
 ---
-
-Se precisar de qualquer ajuste no texto ou quiser adicionar mais algum detalhe técnico so

@@ -28,8 +28,8 @@ from mediapipe.tasks.python import vision
 options = vision.PoseLandmarkerOptions(
     base_options=mp.tasks.BaseOptions(model_asset_path=modelo_encontrado),
     running_mode=vision.RunningMode.IMAGE,
-    min_pose_detection_confidence=0.70,
-    min_pose_presence_confidence=0.70
+    min_pose_detection_confidence=0.70, 
+    min_pose_presence_confidence=0.70   
 )
 
 # =====================================================================
@@ -37,11 +37,61 @@ options = vision.PoseLandmarkerOptions(
 # =====================================================================
 with vision.PoseLandmarker.create_from_options(options) as landmarker:
     
-    cap = cv2.VideoCapture(1)
-    if not cap.isOpened():
-        cap = cv2.VideoCapture(2)
-        if not cap.isOpened():
-            cap = cv2.VideoCapture(0)
+    # VARREDURA DE DISPOSITIVOS DE VÍDEO
+    cameras_encontradas = []
+    
+    # Faz uma varredura inicial usando DirectShow para ser mais rápido
+    for i in range(6): # Reduzi para 6 para ir ainda mais rápido no teste inicial
+        test_cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+        if test_cap.isOpened():
+            success, _ = test_cap.read()
+            if success:
+                cameras_encontradas.append(i)
+            test_cap.release()
+
+    if not cameras_encontradas:
+        print("\n[ERRO CRÍTICO] Nenhuma câmera foi detectada pelo sistema!")
+        sys.exit()
+
+    # LÓGICA DE SELEÇÃO MANUAL
+    if len(cameras_encontradas) > 1:
+        print("\n" + "="*40)
+        print(" [CONFIG] MÚLTIPLAS CÂMERAS DETECTADAS")
+        print("="*40)
+        for cam in cameras_encontradas:
+            if cam == 0:
+                tipo = "Webcam Nativa do Notebook"
+            elif cam == 1:
+                tipo = "Webcam Externa (USB)"
+            elif cam == 2:
+                tipo = "Conexão com a Câmera do Celular"
+            else:
+                tipo = "Outro Dispositivo de Vídeo"
+            print(f"  Índice [{cam}] -> {tipo}")
+        print("="*40)
+        
+        while True:
+            try:
+                escolha = int(input(f"\nDigite o número do índice que deseja usar {cameras_encontradas}: "))
+                if escolha in cameras_encontradas:
+                    indice_escolhido = escolha
+                    break
+                else:
+                    print(f"[AVISO] Índice {escolha} inválido. Escolha um dos ativos.")
+            except ValueError:
+                print("[AVISO] Por favor, digite apenas números.")
+    else:
+        indice_escolhido = cameras_encontradas[0]
+        print(f"\n[INFO] Apenas uma câmera detectada. Usando o índice padrão: {indice_escolhido}")
+
+    # Inicializa a câmera usando DirectShow (CAP_DSHOW) para pular o delay do MSMF
+    print(f"\n[INFO] Inicializando a câmera {indice_escolhido} de forma rápida...")
+    cap = cv2.VideoCapture(indice_escolhido, cv2.CAP_DSHOW)
+    
+    # Configurações de imagem otimizadas para evitar travamentos
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
     tempo_presente = 0.0
     tempo_ausente = 0.0
@@ -55,11 +105,9 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
     ref_nariz_x, ref_nariz_y, ref_dist_ombros_olhos = None, None, None
     frames_calibracao = 0
 
-    # -----------------------------------------------------------------
-    # VARIÁVEIS NOVAS PARA O DELAY DE 5 SEGUNDOS
-    # -----------------------------------------------------------------
-    tempo_inicio_desalinhado = None  # Guarda o momento em que a postura ficou errada
-    TEMPO_LIMITE_ALERTA = 5.0        # Tempo de tolerância em segundos
+    # VARIÁVEIS PARA O DELAY DE FILTRO TEMPORAL
+    tempo_inicio_desalinhado = None  
+    TEMPO_LIMITE_ALERTA = 3.0        
 
     print("\n" + "="*50)
     print(" SISTEMA DE MONITORAMENTO ERGONÔMICO (PUC-MG)")
@@ -98,8 +146,9 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
             centro_olhos_y = (landmarks[2].y + landmarks[5].y) / 2.0
             dist_ombros_olhos_atual = (landmarks[11].y + landmarks[12].y) / 2.0 - centro_olhos_y
 
-            cv2.line(frame, (int(landmarks[11].x*w), int(landmarks[11].y*h)), (int(landmarks[12].x*w), int(landmarks[12].y*h)), (255, 255, 255), 2)
-            cv2.circle(frame, (int(nariz_x*w), int(nariz_y*h)), 6, (0, 255, 0), -1)
+            # Desenho do esqueleto inteligente comercial (Apenas Ombro a Ombro e Rosto)
+            cv2.line(frame, (int(landmarks[11].x * w), int(landmarks[11].y * h)), (int(landmarks[12].x * w), int(landmarks[12].y * h)), (255, 255, 255), 2)
+            cv2.circle(frame, (int(nariz_x * w), int(nariz_y * h)), 6, (0, 255, 0), -1)
 
             if frames_calibracao < 30:
                 if ref_nariz_x is None:
@@ -113,7 +162,6 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
                 texto_postura = "CALIBRANDO SUA ANATOMIA..."
                 cor_hud = (255, 255, 0)
             else:
-                # Detecta se há alguma inconformidade física na postura
                 postura_fisicamente_errada = False
                 motivo_erro = ""
                 
@@ -130,42 +178,35 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
                     postura_fisicamente_errada = True
                     motivo_erro = "ALERTA: OMBROS INCLINADOS!"
 
-                # -------------------------------------------------------------
-                # NOVA LÓGICA DE FILTRO TEMPORAL (DELAY DE 5 SEGUNDOS)
-                # -------------------------------------------------------------
+                # LÓGICA DE FILTRO TEMPORAL (DELAY DE 5 SEGUNDOS)
                 if postura_fisicamente_errada:
                     if tempo_inicio_desalinhado is None:
-                        # Começou a ficar torto agora, inicia o cronômetro
                         tempo_inicio_desalinhado = tempo_atual
                     
                     tempo_passado_errado = tempo_atual - tempo_inicio_desalinhado
                     
                     if tempo_passado_errado >= TEMPO_LIMITE_ALERTA:
-                        # Passou dos 5 segundos? Aí sim muda o estado e ativa o alerta vermelho
                         classe_predita = 2
                         cor_hud = (0, 0, 255)
                         texto_postura = motivo_erro
                     else:
-                        # Está torto, mas ainda na tolerância dos 5 segundos (mantém HUD amarelo/aviso)
                         tempo_restante = int(TEMPO_LIMITE_ALERTA - tempo_passado_errado) + 1
                         texto_postura = f"POSTURA INSTAVEL... ({tempo_restante}s)"
-                        cor_hud = (0, 165, 255) # Laranja (Aviso)
+                        cor_hud = (0, 165, 255) # Laranja para aviso
                 else:
-                    # Se a postura voltou ao normal, reseta o cronômetro instantaneamente
                     tempo_inicio_desalinhado = None
-
         else:
             tempo_ausente += dt
             texto_postura = "CADEIRA VAZIA"
             cor_hud = (255, 0, 0)
-            tempo_inicio_desalinhado = None # Reseta se o usuário sumir da câmera
+            tempo_inicio_desalinhado = None 
 
-        # SÓ ADICIONA NA MATRIZ APÓS A CALIBRAÇÃO TERMINAR (Evita sujeira nos dados)
+        # SÓ COLETA DADOS APÓS CALIBRAÇÃO ESTABILIZAR
         if frames_calibracao >= 30:
             y_real.append(classe_real_atual)
             y_predito.append(classe_predita)
 
-        # Desenho do HUD
+        # Renderização do HUD na Tela
         cv2.rectangle(frame, (10, 10), (460, 150), (0, 0, 0), -1)
         cv2.rectangle(frame, (10, 10), (460, 150), cor_hud, 2)
         
@@ -198,7 +239,7 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
     cv2.destroyAllWindows()
 
 # =====================================================================
-# MATRIZ DE CONFUSÃO DO PROFESSOR (GERADA AO APERTAR 'Q')
+# MATRIZ DE CONFUSÃO E RELATÓRIO ANALÍTICO
 # =====================================================================
 nomes_classes = ['Ausente', 'Presente (Ok)', 'Postura Inadequada']
 print("\n" + "="*60)
@@ -208,15 +249,26 @@ print(f"Tempo Total Conectado: {int(tempo_presente)} segundos")
 print(f"Tempo Total Longe do PC: {int(tempo_ausente)} segundos")
 print("-"*60)
 
-# Incluído o parâmetro labels para blindar contra erros de execução rápida
-print(classification_report(y_real, y_predito, labels=[0, 1, 2], target_names=nomes_classes, zero_division=0))
+if len(y_real) > 0:
+    print(classification_report(y_real, y_predito, labels=[0, 1, 2], target_names=nomes_classes, zero_division=0))
 
-cm = confusion_matrix(y_real, y_predito, labels=[0, 1, 2])
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=nomes_classes)
-disp.plot(cmap=plt.cm.Blues, values_format='d')
+    cm = confusion_matrix(y_real, y_predito, labels=[0, 1, 2])
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=nomes_classes)
+    disp.plot(cmap=plt.cm.Blues, values_format='d')
 
-plt.title('Matriz de Confusão por Teclado - PUC-MG')
-plt.xlabel('Predito pelo Sistema (IA)')
-plt.ylabel('Realidade (Gabarito Informado)')
-plt.savefig('matriz_tempo_real.png', bbox_inches='tight')
-plt.show()
+    plt.title('Matriz de Confusão por Teclado - PUC-MG')
+    plt.xlabel('Predito pelo Sistema (IA)')
+    plt.ylabel('Realidade (Gabarito Informado)')
+    plt.savefig('matriz_tempo_real.png', bbox_inches='tight')
+    
+    # FORÇA A MATRIZ A PULAR NA TELA NA FRENTE DE TUDO
+    try:
+        fig = plt.gcf()
+        fig.canvas.manager.window.attributes('-topmost', 1)
+    except Exception:
+        pass 
+        
+    print("\n[INFO] Exibindo a Matriz de Confusão... Feche a janela do gráfico para encerrar o programa.")
+    plt.show()
+else:
+    print("[AVISO] O sistema foi fechado antes de coletar dados válidos pós-calibração.")
