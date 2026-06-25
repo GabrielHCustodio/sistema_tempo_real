@@ -23,8 +23,8 @@ O sistema também conta com uma ferramenta de validação analítica (Gabarito v
 ## 📋 Pré-requisitos
 
 Antes de iniciar, certifique-se de ter instalado em sua máquina:
-* **Python 3.9, 3.10 ou 3.11** (Recomendado: Python 3.10).
-* Uma webcam conectada (ou aplicativo de emulação como DroidCam/Iriun).
+* **Python** (Testado em versões a partir do 3.10; ambiente atual baseado no Python 3.14).
+* Uma ou mais webcams conectadas (integrada, USB ou emuladores como DroidCam/Iriun).
 
 ---
 
@@ -38,13 +38,14 @@ Baixe os arquivos do projeto para a máquina local e abra o terminal (ou prompt 
 ### 2. Instalar as Dependências
 Com o ambiente virtual ativo, instale todas as bibliotecas necessárias executando:
 
-Bash
+```bash
 pip install opencv-python mediapipe numpy scikit-learn labels matplotlib
+```
 
 ### 3. Baixar o Modelo do MediaPipe (.task)
 O MediaPipe necessita do arquivo de pesos do modelo de Machine Learning para rodar localmente.
 
-Baixe o arquivo oficial do Pose Landmarker (versão Heavy ou Full) diretamente da documentação do MediaPipe.
+Arquivo oficial do Pose Landmarker presente nesse projeto, caso haja algum erro baixe o arquivo oficial do Pose Landmarker (versão Heavy ou Full) diretamente da documentação do MediaPipe.
 
 Nomeie o arquivo ou garanta que ele possua a palavra pose no nome e a extensão .task (Exemplo: pose_landmarker_full.task).
 
@@ -53,8 +54,10 @@ Cole o arquivo baixado na mesma pasta onde o script sistema_tempo_real.py está 
 ### 4. Executar o Sistema
 Agora basta iniciar o script principal:
 
-Bash
+```bash
 python sistema_tempo_real.py
+```
+
 🎮 Comandos do Sistema (Mapeamento do Teclado)
 Durante a execução da câmera, você pode interagir com o sistema usando o teclado para alimentar o gabarito real da Matriz de Confusão:
 
@@ -67,3 +70,18 @@ Durante a execução da câmera, você pode interagir com o sistema usando o tec
 [q] -> SAIR do sistema, encerrar a câmera e gerar automaticamente os gráficos e relatórios na tela.
 
 ---
+
+### 5. Criar e Ativar o Ambiente Virtual (venv)
+Caso haja conflito entre as dependências isoladas e evitar conflitos de versões, cria e ativa um ambiente virtual executando os comandos abaixo:
+
+**No Windows:**
+```bash
+# Criar o ambiente virtual
+python -m venv venv
+
+# Ativar o ambiente virtual
+venv\Scripts\activate
+
+# Executar
+python sistema_tempo_real.py
+```
