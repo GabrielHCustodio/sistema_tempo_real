@@ -72,7 +72,7 @@ Durante a execução da câmera, você pode interagir com o sistema usando o tec
 ---
 
 ### 5. Criar e Ativar o Ambiente Virtual (venv)
-Caso haja conflito entre as dependências isoladas e evitar conflitos de versões, cria e ativa um ambiente virtual executando os comandos abaixo:
+Caso haja conflito entre as dependências isoladas e versões, crie e ative um ambiente virtual executando os comandos abaixo:
 
 **No Windows:**
 ```bash
