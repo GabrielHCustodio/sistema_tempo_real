@@ -26,7 +26,7 @@ O sistema também conta com uma ferramenta de validação analítica (Gabarito v
 
 * **Detecção Automática de Presença/Ausência:** Identifica se o usuário está em frente ao PC ou se a cadeira está vazia.
 * **Calibração Anatômica Inicial:** Nos primeiros 30 frames, o sistema calcula uma média móvel da postura do usuário para adaptar os limites à sua anatomia e distância da câmera.
-* **Filtro de Ruído Temporal (Delay de 5s):** Evita falsos positivos. Movimentos rápidos e naturais (como pegar uma garrafa de água ou se coçar) deixam o HUD em estado de *Aviso (Laranja)*. O alerta de *Postura Inadequada (Vermelho)* só é validado se o usuário permanecer na posição incorreta por mais de 3 segundos seguidos.
+* **Filtro de Ruído Temporal (Delay de 3s):** Evita falsos positivos. Movimentos rápidos e naturais (como pegar uma garrafa de água ou se coçar) deixam o HUD em estado de *Aviso (Laranja)*. O alerta de *Postura Inadequada (Vermelho)* só é validado se o usuário permanecer na posição incorreta por mais de 3 segundos seguidos.
 * **Análise Ergonômica:**
     * Postura Corcunda (baseada na distância proporcional entre ombros e olhos).
     * Tronco muito baixo (aproximação excessiva da tela).
