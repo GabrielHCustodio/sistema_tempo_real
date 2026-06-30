@@ -14,11 +14,40 @@
 
 - Will Ricardo dos Santos Machado
 
+---
+
+## Problema
+
+No cenário contemporâneo de trabalho e estudo digital, a permanência prolongada e contínua de indivíduos em frente aos computadores gerou uma crise silenciosa relacionada à ergonomia e à saúde física. A falta de mecanismos automatizados e não invasivos para monitorar o comportamento dos usuários gera desafios críticos em três frentes principais:
+
+* **Distúrbios Osteomusculares relacionados ao Trabalho (DORT):** Durante sessões extensas de uso do computador, os usuários frequentemente adotam posturas corporais nocivas de forma inconsciente — como a inclinação excessiva do tronco em direção à tela, desalinhamentos laterais, assimetria nos ombros e a posição corcunda. A ausência de alertas ou feedbacks instantâneos faz com que essas posições prejudiciais sejam mantidas por horas, resultando em dores crônicas, fadiga muscular e lesões a longo prazo.
+* **Falta de Visibilidade sobre Produtividade e Foco:** Instituições de ensino e ambientes corporativos enfrentam dificuldades para mensurar, de forma passiva e precisa, o tempo real de engajamento e a permanência efetiva de estudantes ou colaboradores em frente às estações de trabalho. Os métodos tradicionais dependem de estimativas manuais falhas ou de métricas computacionais imprecisas (como a mera movimentação do mouse ou pressionar de teclas), que não refletem a real presença física do indivíduo.
+* **Ausência de Validação Científica em Soluções de Rastreamento:** Grande parte das ferramentas comerciais ou experimentais de monitoramento de usuários carece de metodologias de validação estatística rigorosas integradas ao seu ciclo de uso. Isso torna complexo medir cientificamente a precisão e a confiabilidade de sistemas classificatórios quando expostos a ruídos do mundo real (como movimentos naturais e rápidos do cotidiano).
+
+### Contexto de Aplicação
+
+O ecossistema em que esse problema se manifesta compreende estações de trabalho e estudo convencionais em ambientes domésticos, acadêmicos ou corporativos. Do ponto de vista de infraestrutura e hardware, o cenário limita-se ao uso de dispositivos de captura de vídeo comuns e de baixo custo (webcams integradas ou periféricas via USB), sem a disponibilidade de sensores de profundidade caros ou estúdios de biometria dedicados. 
+
+O contexto exige uma solução que atue em tempo real, respeite a privacidade do usuário e opere em segundo plano de forma totalmente passiva, sem interromper o fluxo de atenção do indivíduo com comandos intrusivos. Academicamente, a pesquisa se posiciona na intersecção entre a ergonomia do trabalho e o campo da Visão Computacional, demandando a aplicação de validação estatística para avaliar com rigor científico o comportamento observado.
+
+---
+
 ## Objetivo
 
 Este projeto consiste em um sistema inteligente de monitoramento postural e de presença utilizando Visão Computacional. Através da biblioteca **MediaPipe (Pose Landmarker)** e **OpenCV**, o sistema analisa a estrutura corporal do usuário em tempo real via webcam para identificar desvios ergonômicos comuns e acompanhar o tempo de foco do usuário.
 
 O sistema também conta com uma ferramenta de validação analítica (Gabarito via teclado), permitindo gerar uma **Matriz de Confusão** e um **Relatório de Classificação** (`scikit-learn`) ao final de cada sessão para medir cientificamente a precisão do algoritmo.
+
+---
+
+## 🎯 Aplicações Possíveis
+
+Com base nos recursos de monitoramento e análise de pose desenvolvidos, o sistema pode ser aplicado de forma prática nos seguintes cenários:
+
+* **Controle de Produtividade:** Monitoramento automatizado do tempo de uso e análise aprofundada do comportamento do usuário dentro de ambientes computacionais corporativos ou acadêmicos.
+* **Monitoramento de Tempo:** Medição de alta precisão do tempo real de permanência do usuário em frente ao computador, permitindo mapear e analisar padrões de uso ao longo do dia.
+* **Análise de Comportamento:** Identificação detalhada de hábitos de uso e rotinas comportamentais estabelecidas pelo usuário durante as suas sessões focadas de trabalho ou estudo.
+* **Detecção de Postura Inadequada:** Identificação instantânea e automatizada de posições corporais incorretas ou prejudiciais à saúde ergonômica durante o período de uso do computador.
 
 ---
 
@@ -35,6 +64,26 @@ O sistema também conta com uma ferramenta de validação analítica (Gabarito v
 * **Métricas Acadêmicas:** Gera automaticamente o relatório de classificação (`Precision`, `Recall`, `F1-Score`) e salva o gráfico da `Matriz de Confusão` em formato `.png` ao encerrar.
 
 ---
+
+## ⚙️ Funcionamento do Sistema
+
+O fluxo de execução do sistema baseia-se em quatro etapas principais operadas de forma contínua:
+
+1. **Captura de Vídeo:** A webcam realiza a captura das imagens em tempo real utilizando a biblioteca OpenCV.
+2. **Processamento:** Os frames capturados são convertidos para o espaço de cores RGB para que possam ser processados corretamente pelo MediaPipe.
+3. **Detecção de Pose:** O algoritmo realiza a identificação automatizada de pontos-chave (*landmarks*) do corpo humano. Para otimização e escopo do projeto, o sistema foca estritamente nos marcos anatômicos superiores, detectando as posições do **nariz** e dos **ombros** do usuário.
+4. **Exibição:** Um esqueleto virtual contendo as conexões anatômicas detectadas é desenhado sobre o corpo do usuário na interface gráfica.
+
+---
+
+## 🔧 Adaptações e customizações do Projeto
+
+Para atender ao escopo ergonômico e de monitoramento em desktops, a implementação original foi customizada com as seguintes lógicas:
+
+* **Foco na Parte Superior:** O algoritmo foi configurado para priorizar a análise de pontos relacionados à cabeça (como o nariz), ombros e cotovelos do usuário.
+* **Detecção de Presença:** A presença do usuário em frente à estação de trabalho é validada apenas através da identificação simultânea dos pontos-chave com um nível mínimo de confiança estabelecido.
+* **Contagem de Tempo:** O cronômetro de foco é iniciado automaticamente assim que a presença é detectada, sendo pausado instantaneamente no momento em que o usuário sai do campo de visão da webcam.
+* **Exibição de Informações:** O tempo acumulado de permanência e os indicadores de estado são renderizados e exibidos em tempo real diretamente no HUD da tela de vídeo.
 
 ## 📋 Pré-requisitos
 
@@ -101,3 +150,18 @@ venv\Scripts\activate
 # Executar
 python sistema_tempo_real.py
 ```
+---
+
+## Links de Implementação de Referência
+O projeto utilizará como base a seguinte implementação disponível publicamente:
+
+Repositório GitHub:
+```bash
+https://github.com/devDurgeshK/poseEstimationModule
+```
+Vídeo de apoio:
+
+```bash
+https://www.youtube.com/watch?v=riuU9uH7av8
+```
+---
